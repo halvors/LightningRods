@@ -39,16 +39,14 @@ public class LightningRod {
 
 	@PreInit
 	public void preInit(FMLPreInitializationEvent event) {
-		Configuration config = new Configuration(
-				event.getSuggestedConfigurationFile());
+		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 
 		try {
 			config.load();
 			Property block = config.getBlock("lightningRodGenerator", 2679);
 			block.comment = "The block id for the Lightning Rod Generator.";
 			blockLightningRodGenerator = new BlockLightningRodGenerator(block.getInt(2679));
-			Property scale = config.get(Configuration.CATEGORY_GENERAL,
-					"scaleFactor", 1);
+			Property scale = config.get(Configuration.CATEGORY_GENERAL, "scaleFactor", 1);
 			scale.comment = "The EU generation scaling factor. "
 					+ "The average number of ticks needed to generate one EU packet."
 					+ "1 is every tick, 2 is every other tick etc. "
@@ -77,12 +75,13 @@ public class LightningRod {
 
 	@PostInit
 	public void postInit(FMLPostInitializationEvent event) {
-//		// Recipe
-//		GameRegistry.addRecipe(new ItemStack(Block.stone), "rrr", "ctc", "aga",
-//				'r', Items.getItem("refinedIronIngot"), 'c',
-//				Items.getItem("trippleInsulatedIronCableItem"), 't',
-//				Items.getItem("hvTransformer"), 'a',
-//				Items.getItem("advancedCircuit"), 'g',
-//				Items.getItem("generator"));
+		// Recipe
+		GameRegistry.addRecipe(new ItemStack(blockLightningRodGenerator), "rir", "ctc", "aga", 
+				'r', Items.getItem("refinedIronIngot"), 
+				'i', Items.getItem("ironFence"), 
+				'c', Items.getItem("trippleInsulatedIronCableItem"), 
+				't', Items.getItem("hvTransformer"), 
+				'a', Items.getItem("advancedCircuit"), 
+				'g', Items.getItem("generator"));
 	}
 }
