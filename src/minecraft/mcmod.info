@@ -1,0 +1,28 @@
+[
+{
+  "modid": "LightningRod",
+  "name": "Lightning Rod",
+  "description": "LightningRod is a Industrial Craft 2 addon.",
+  "version": "@VERSION@",
+  "mcversion": "1.4.7",
+  "url": "",
+  "updateUrl": "",
+  "authors": [
+    "halvors"
+  ],
+  "credits": "By halvors",
+  "logoFile": "",
+  "screenshots": [
+  ],
+  "parent":"",
+  "requiredMods": [
+    "IC2@[1.112,)",
+    "Forge@[4.1,)",
+    "FML@[3.1.15,)"
+  ],
+  "dependencies": [
+  	"IC2@[1.112,)"
+  ],
+  "useDependencyInformation" : "true"
+}
+]
