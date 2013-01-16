@@ -13,27 +13,25 @@ public class ContainerLightningRodGenerator extends Container {
 		this.tileEntity = tileEntity;
 		this.playerInventory = playerInventory;
 
-		// Lightning Rod
 		addSlotToContainer(new Slot(tileEntity, 0, 80, 53));
 
-		// Inventory
 		for (int inventoryRow = 0; inventoryRow < 3; inventoryRow++) {
 			for (int inventoryColumn = 0; inventoryColumn < 9; inventoryColumn++) {
-				addSlotToContainer(new Slot(playerInventory, inventoryColumn
-						+ inventoryRow * 9 + 9, 8 + inventoryColumn * 18,
-						84 + inventoryRow * 18));
+				addSlotToContainer(new Slot(playerInventory, inventoryColumn + inventoryRow * 9 + 9, 8 + inventoryColumn * 18, 84 + inventoryRow * 18));
 			}
 		}
 
-		// Hotbar
 		for (int hotbarSlot = 0; hotbarSlot < 9; hotbarSlot++) {
-			addSlotToContainer(new Slot(playerInventory, hotbarSlot,
-					8 + hotbarSlot * 18, 142));
+			addSlotToContainer(new Slot(playerInventory, hotbarSlot, 8 + hotbarSlot * 18, 142));
 		}
 	}
 
 	@Override
 	public boolean canInteractWith(EntityPlayer entityPlayer) {
 		return tileEntity.isUseableByPlayer(entityPlayer);
+	}
+	
+	public TileEntityLightningRodGenerator getTileEntity() {
+		return tileEntity;
 	}
 }

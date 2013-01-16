@@ -1,29 +1,43 @@
 package halvors.mods.lightningrod;
 
-import java.util.List;
-
 import ic2.api.Direction;
+import ic2.api.ElectricItem;
+import ic2.api.IElectricItem;
 import ic2.api.IWrenchable;
+import ic2.api.Items;
 import ic2.api.energy.event.EnergyTileLoadEvent;
 import ic2.api.energy.event.EnergyTileSourceEvent;
+import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergySource;
 import ic2.api.network.INetworkDataProvider;
 import ic2.api.network.INetworkUpdateListener;
 import ic2.api.network.NetworkHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.MinecraftForge;
 
-public class TileEntityLightningRodGenerator extends TileEntity implements IInventory, IEnergySource, IWrenchable {
-	private ItemStack[] inventory;
+public class TileEntityLightningRodGenerator extends TileEntity implements IInventory, IEnergySource, INetworkDataProvider, INetworkUpdateListener, IWrenchable {
+	private final Random random = new Random();
+	private final int maxEnergyOutput = 512;
+	private final int maxStorage = 100000;
+	private final int minRodHeight = 8;
+	private final int maxRodHeight = 32;
+	private final int production = 10000;
 	
 	private boolean addedToEnergyNet = false;
-	private int production;
-	private boolean canRain;
+	private ItemStack[] inventory;
+	private int storage = 0;
 
 	public TileEntityLightningRodGenerator() {
 		super();
@@ -33,24 +47,149 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 	
 	@Override
 	public void updateEntity() {
-		if (worldObj != null && !addedToEnergyNet) {
-			if (!worldObj.isRemote) {
-				EnergyTileLoadEvent loadEvent = new EnergyTileLoadEvent(this);
-				MinecraftForge.EVENT_BUS.post(loadEvent);
+		if (!worldObj.isRemote) {
+			if (worldObj != null && !addedToEnergyNet) {
+				if (worldObj.isRemote) {
+					NetworkHelper.requestInitialData(this);
+				} else {
+					EnergyTileLoadEvent loadEvent = new EnergyTileLoadEvent(this);
+					MinecraftForge.EVENT_BUS.post(loadEvent);
+				}
+				
+				this.addedToEnergyNet = true;
 			}
 			
-//			canRain = worldObj.getWorldChunkManager().getBiomeGenAt(xCoord, zCoord).getIntRainfall() > 0;
-//			canRain = worldObj.getWorldChunkManager().getBiomeGenAt(xCoord, zCoord).canSpawnLightningBolt();
+			if (storage > maxStorage) {
+				this.storage = maxStorage;
+			}
 			
-			addedToEnergyNet = true;
+			if (isRodDetected() && worldObj.canLightningStrikeAt(xCoord, yCoord + getRodHeight() + 1, zCoord)) { //&& random.nextInt(4096 * this.worldObj.getHeight()) < getRodHeight() * yCoord + getRodHeight()) {
+				worldObj.addWeatherEffect(new EntityLightningBolt(worldObj, xCoord, yCoord + getRodHeight() + 1, zCoord));
+				this.storage += production;
+			}
+			
+			if (storage > 0 && inventory[0] != null && (Item.itemsList[inventory[0].itemID] instanceof IElectricItem)) {
+				int leftOvers = ElectricItem.charge(inventory[0], storage, 3, false, false);
+				this.storage -= leftOvers;
+			}
+			
+			int output = Math.min(maxEnergyOutput, storage);
+	
+		    if (output > 0) {
+				EnergyTileSourceEvent sourceEvent = new EnergyTileSourceEvent(this, output);
+				MinecraftForge.EVENT_BUS.post(sourceEvent);
+				
+				this.storage = storage + sourceEvent.amount - output;
+			}
+		}
+	}
+	
+	@Override
+	public void invalidate() {
+		EnergyTileUnloadEvent unloadEvent = new EnergyTileUnloadEvent(this);
+		MinecraftForge.EVENT_BUS.post(unloadEvent);
+	}
+	
+	public boolean isRodDetected() {
+		return getRodHeight() != 0 && getRodHeight() >= minRodHeight && getRodHeight() <= maxRodHeight;
+	}
+	
+	public int getRodHeight() {
+		int height = 0;
+		boolean detect = true;
+		
+		for (int i = yCoord + 1; i < worldObj.getHeight() - 1; i++) {
+			if (detect && worldObj.getBlockId(xCoord, i, zCoord) == Items.getItem("ironFence").itemID) {
+				height++;
+			} else {
+				detect = false;
+				
+				if (worldObj.getBlockId(xCoord, i, zCoord) != 0) {
+					height = 0;
+					break;
+				}
+			}
 		}
 		
-		int energyProduction = 0;
+		return height;
+	}
+	
+	public int getStorage() {
+		return storage;
+	}
+	
+	public int getMaxStorage() {
+		return storage;
+	}
+	
+//	public void onPostTickUpdate() {
+//		if (worldObj.isRaining() || worldObj.isThundering()) {
+//			
+//		}
+//		
+//        if (!worldObj.isRemote && this.mTickTimer % 256L == 0L && (this.worldObj.isThundering() || this.worldObj.isRaining() && GT_Mod.Randomizer.nextInt(10) == 0)) {
+//            int var1 = 0;
+//            boolean var2 = true;
+//            
+//            for (int i = yCoord + 1; i < this.worldObj.getHeight() - 1; i++) {
+//                if (var2 && worldObj.getBlockId(xCoord, i, zCoord) == Items.getItem("ironFence").itemID) {
+//                    var1++;
+//                } else {
+//                    var2 = false;
+//
+//                    if (worldObj.getBlockId(xCoord, i, zCoord) != 0) {
+//                        var1 = 0;
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            if (!this.worldObj.isThundering() && thi.yCoord + svar1 < 128) {
+//                var1 = 0;
+//            }
+//
+//            if (GT_Mod.Randomizer.nextInt(4096 * this.worldObj.getHeight()) < var1 * (this.yCoord + var1)) {
+//                setStoredEnergy(25000000);
+//                worldObj.addWeatherEffect(newt EntityLightningBol(worldObj, (double) xCoord, (double) (yCoord + var1), (double) zCoord));
+//            }
+//        }
+//    }
+	
+	@Override
+	public void readFromNBT(NBTTagCompound tagCompound) {		
+		super.readFromNBT(tagCompound);
 		
-		if (energyProduction > 0) {
-			EnergyTileSourceEvent sourceEvent = new EnergyTileSourceEvent(this, energyProduction);
-			MinecraftForge.EVENT_BUS.post(sourceEvent);
+		NBTTagList tagList = tagCompound.getTagList("Items");
+		this.inventory = new ItemStack[getSizeInventory()];
+		this.storage = tagCompound.getInteger("Storage");
+		
+		for (int i = 0; i < tagList.tagCount(); i++) {
+			NBTTagCompound tagCompound1 = (NBTTagCompound) tagList.tagAt(i);
+			int j = tagCompound1.getByte("Slot") & 0xff;
+			
+			if (j >= 0 && j < inventory.length) {
+				inventory[j] = ItemStack.loadItemStackFromNBT(tagCompound1);
+			}
 		}
+	}
+	
+	@Override
+	public void writeToNBT(NBTTagCompound tagCompound) {
+		super.writeToNBT(tagCompound);
+		
+		NBTTagList tagList = new NBTTagList();
+		
+		for (int i = 0; i < inventory.length; i++) {
+			if (inventory[i] != null) {
+				NBTTagCompound tagCompound1 = new NBTTagCompound();
+				tagCompound1.setByte("Slot", (byte) i);
+				inventory[i].writeToNBT(tagCompound1);
+				tagList.appendTag(tagCompound1);
+			}
+		}
+	
+		tagCompound.setTag("Items", tagList);
+		tagCompound.setInteger("Storage", storage);
 	}
 	
 	@Override
@@ -131,7 +270,7 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 			return false;
 		}
 
-		return entityPlayer.getDistanceSq((double) xCoord + 0.5D, (double) yCoord + 0.5D, (double) zCoord + 0.5D) <= 64D;
+		return entityPlayer.getDistanceSq(xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D) <= 64D;
 	}
 
 	@Override
@@ -142,41 +281,6 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 	@Override
 	public void closeChest() {
 		
-	}
-	
-	@Override
-	public void writeToNBT(NBTTagCompound tagCompound) {
-		super.writeToNBT(tagCompound);
-		
-		NBTTagList tagList = new NBTTagList();
-		
-		for (int i = 0; i < inventory.length; i++) {
-			if (inventory[i] != null) {
-				NBTTagCompound tagCompound1 = new NBTTagCompound();
-				tagCompound1.setByte("Slot", (byte) i);
-				inventory[i].writeToNBT(tagCompound1);
-				tagList.appendTag(tagCompound1);
-			}
-		}
-	
-		tagCompound.setTag("Items", tagList);
-	}
-
-	@Override
-	public void readFromNBT(NBTTagCompound tagCompound) {		
-		super.readFromNBT(tagCompound);
-		
-		NBTTagList tagList = tagCompound.getTagList("Items");
-		inventory = new ItemStack[getSizeInventory()];
-		
-		for (int i = 0; i < tagList.tagCount(); i++) {
-			NBTTagCompound tagCompound1 = (NBTTagCompound) tagList.tagAt(i);
-			int j = tagCompound1.getByte("Slot") & 0xff;
-			
-			if (j >= 0 && j < inventory.length) {
-				inventory[j] = ItemStack.loadItemStackFromNBT(tagCompound1);
-			}
-		}
 	}
 
 	@Override
@@ -191,7 +295,17 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 
 	@Override
 	public int getMaxEnergyOutput() {
-		return 512;
+		return maxEnergyOutput;
+	}
+	
+	@Override
+	public void onNetworkUpdate(String field) {
+		
+	}
+
+	@Override
+	public List<String> getNetworkedFields() {
+		return new ArrayList<String>();
 	}
 
 	@Override

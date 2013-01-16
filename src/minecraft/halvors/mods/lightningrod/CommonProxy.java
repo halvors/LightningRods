@@ -18,6 +18,7 @@ public class CommonProxy implements IGuiHandler {
 		
 		if (tileEntity != null && tileEntity instanceof TileEntityLightningRodGenerator) {
 			TileEntityLightningRodGenerator tileEntityLightningRod = (TileEntityLightningRodGenerator) tileEntity;
+			
 			return new ContainerLightningRodGenerator(player.inventory, tileEntityLightningRod);
 		}
 		

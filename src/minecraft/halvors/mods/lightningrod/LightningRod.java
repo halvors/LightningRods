@@ -67,7 +67,7 @@ public class LightningRod {
 		GameRegistry.registerBlock(blockLightningRodGenerator, "lightningRodGenerator");
 
 		// TileEntity
-		GameRegistry.registerTileEntity(TileEntityLightningRodGenerator.class, "LightningRodGenerator");
+		GameRegistry.registerTileEntity(TileEntityLightningRodGenerator.class, "lightningRodGenerator");
 		
 		proxy.registerRenderers();
 		NetworkRegistry.instance().registerGuiHandler(this, proxy);

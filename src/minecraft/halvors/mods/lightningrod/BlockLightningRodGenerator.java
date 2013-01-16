@@ -1,14 +1,21 @@
 package halvors.mods.lightningrod;
 
+import ic2.api.Items;
+
+import java.util.Random;
+
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public class BlockLightningRodGenerator extends BlockContainer {
+	private final Random random = new Random();
+	
 	public BlockLightningRodGenerator(int blockId) {
 		super(blockId, Material.iron);
 
@@ -58,7 +65,7 @@ public class BlockLightningRodGenerator extends BlockContainer {
 
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int s, float f1, float f2, float f3) {
-		if (player.isSneaking()) {
+		if (player.isSneaking() || player.getHeldItem() != null && player.getHeldItem().itemID == Items.getItem("ironFence").itemID) {
 			return false;
 		}
 
