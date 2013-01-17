@@ -3,6 +3,7 @@ package halvors.mods.lightningrod;
 import ic2.api.Direction;
 import ic2.api.ElectricItem;
 import ic2.api.IElectricItem;
+import ic2.api.IEnergyStorage;
 import ic2.api.IWrenchable;
 import ic2.api.Items;
 import ic2.api.energy.event.EnergyTileLoadEvent;
@@ -30,19 +31,25 @@ import net.minecraftforge.common.MinecraftForge;
 public class TileEntityLightningRodGenerator extends TileEntity implements IInventory, IEnergySource, INetworkDataProvider, INetworkUpdateListener, IWrenchable {
 	private final Random random = new Random();
 	private final int maxEnergyOutput = 512;
-	private final int maxStorage = 100000;
 	private final int minRodHeight = 8;
 	private final int maxRodHeight = 32;
 	private final int production = 10000;
+	private final int capacity = 100000;
 	
-	private boolean addedToEnergyNet = false;
+	private boolean addedToEnergyNet;
+	public boolean canLightningStrike;
+	private int energy = 0;
 	private ItemStack[] inventory;
-	private int storage = 0;
-
+	private boolean rodDetected;
+	private int rodHeight;
+	private int tick;
+	
+	
 	public TileEntityLightningRodGenerator() {
 		super();
 
 		this.inventory = new ItemStack[1];
+		this.tick = random.nextInt(64);
 	}
 	
 	@Override
@@ -59,27 +66,36 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 				this.addedToEnergyNet = true;
 			}
 			
-			if (storage > maxStorage) {
-				this.storage = maxStorage;
+			if (energy > capacity) {
+				energy = capacity;
 			}
 			
-			if (isRodDetected() && worldObj.canLightningStrikeAt(xCoord, yCoord + getRodHeight() + 1, zCoord)) { //&& random.nextInt(4096 * this.worldObj.getHeight()) < getRodHeight() * yCoord + getRodHeight()) {
-				worldObj.addWeatherEffect(new EntityLightningBolt(worldObj, xCoord, yCoord + getRodHeight() + 1, zCoord));
-				this.storage += production;
+			if (tick-- == 0) {
+				detectRod();
+				this.tick = 64;
+				
+				if (rodDetected) {
+					this.canLightningStrike = worldObj.canLightningStrikeAt(xCoord, yCoord + getRodHeight() + 1, zCoord);
+					
+					if (getRodHeight() != 0 && getRodHeight() >= minRodHeight && getRodHeight() <= maxRodHeight && canLightningStrike) { // && random.nextInt(4096 * this.worldObj.getHeight()) < getRodHeight() * yCoord + getRodHeight()) {
+						worldObj.addWeatherEffect(new EntityLightningBolt(worldObj, xCoord, yCoord + getRodHeight() + 1, zCoord));
+						addEnergy(production);
+					}
+				}
 			}
 			
-			if (storage > 0 && inventory[0] != null && (Item.itemsList[inventory[0].itemID] instanceof IElectricItem)) {
-				int leftOvers = ElectricItem.charge(inventory[0], storage, 3, false, false);
-				this.storage -= leftOvers;
+			if (energy > 0 && inventory[0] != null && (Item.itemsList[inventory[0].itemID] instanceof IElectricItem)) {
+				int leftOvers = ElectricItem.charge(inventory[0], energy, 3, false, false);
+				this.energy -= leftOvers;
 			}
 			
-			int output = Math.min(maxEnergyOutput, storage);
+			int output = Math.min(maxEnergyOutput, energy);
 	
 		    if (output > 0) {
 				EnergyTileSourceEvent sourceEvent = new EnergyTileSourceEvent(this, output);
 				MinecraftForge.EVENT_BUS.post(sourceEvent);
 				
-				this.storage = storage + sourceEvent.amount - output;
+				setStored(energy + sourceEvent.amount - output);
 			}
 		}
 	}
@@ -90,11 +106,7 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 		MinecraftForge.EVENT_BUS.post(unloadEvent);
 	}
 	
-	public boolean isRodDetected() {
-		return getRodHeight() != 0 && getRodHeight() >= minRodHeight && getRodHeight() <= maxRodHeight;
-	}
-	
-	public int getRodHeight() {
+	public void detectRod() {
 		int height = 0;
 		boolean detect = true;
 		
@@ -111,15 +123,44 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 			}
 		}
 		
-		return height;
+		if (!detect && height != 0) {
+			this.rodDetected = true;
+			this.rodHeight = height;
+		}
 	}
 	
-	public int getStorage() {
-		return storage;
+	public boolean isRodDetected() {
+		return rodDetected;
 	}
 	
-	public int getMaxStorage() {
-		return storage;
+	public int getRodHeight() {
+		return rodHeight;
+	}
+	
+	public boolean getCanLightningStrike() {
+		return canLightningStrike;
+	}
+	
+	public void setCanLightningStrike(boolean canLightningStrike) {
+		this.canLightningStrike = canLightningStrike;
+	}
+	
+	public int getStored() {
+		return energy;
+	}
+
+	public void setStored(int energy) {
+		this.energy = energy;
+	}
+	
+	public int addEnergy(int amount) {
+		this.energy += amount;
+		
+		return amount;
+	}
+
+	public int getCapacity() {
+		return capacity;
 	}
 	
 //	public void onPostTickUpdate() {
@@ -161,7 +202,7 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 		
 		NBTTagList tagList = tagCompound.getTagList("Items");
 		this.inventory = new ItemStack[getSizeInventory()];
-		this.storage = tagCompound.getInteger("Storage");
+		this.energy = tagCompound.getInteger("Energy");
 		
 		for (int i = 0; i < tagList.tagCount(); i++) {
 			NBTTagCompound tagCompound1 = (NBTTagCompound) tagList.tagAt(i);
@@ -189,7 +230,7 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 		}
 	
 		tagCompound.setTag("Items", tagList);
-		tagCompound.setInteger("Storage", storage);
+		tagCompound.setInteger("Energy", energy);
 	}
 	
 	@Override

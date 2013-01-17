@@ -6,7 +6,7 @@ import net.minecraft.world.World;
 import cpw.mods.fml.common.network.IGuiHandler;
 
 public class CommonProxy implements IGuiHandler {
-	public static String blockTexture = "/halvors/mods/lightningrod/client/block_textures.png";
+	public static String blockTexture = "/halvors/mods/lightningrod/client/sprites/block_textures.png";
 
 	public void registerRenderers() {
 		

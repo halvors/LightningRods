@@ -23,7 +23,7 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
-@Mod(modid = "LightningRod", name = "LightningRod", version = "0.0.1")
+@Mod(modid = "LightningRod", name = "Lightning Rod", version = "0.0.1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class LightningRod {
 	// The instance of your mod that Forge uses.
@@ -35,7 +35,6 @@ public class LightningRod {
 	public static CommonProxy proxy;
 
 	public static BlockLightningRodGenerator blockLightningRodGenerator;
-	public static int productionRate = 1;
 
 	@PreInit
 	public void preInit(FMLPreInitializationEvent event) {
@@ -46,14 +45,8 @@ public class LightningRod {
 			Property block = config.getBlock("lightningRodGenerator", 2679);
 			block.comment = "The block id for the Lightning Rod Generator.";
 			blockLightningRodGenerator = new BlockLightningRodGenerator(block.getInt(2679));
-			Property scale = config.get(Configuration.CATEGORY_GENERAL, "scaleFactor", 1);
-			scale.comment = "The EU generation scaling factor. "
-					+ "The average number of ticks needed to generate one EU packet."
-					+ "1 is every tick, 2 is every other tick etc. "
-					+ "Will still generate a whole packet (512 EU).";
-			productionRate = scale.getInt(1);
 		} catch (Exception e) {
-			FMLLog.log(Level.SEVERE, e, "LightningRod was unable to load it's configuration successfully.");
+			FMLLog.log(Level.SEVERE, e, "Lightning Rod was unable to load it's configuration successfully.");
 			throw new RuntimeException(e);
 		} finally {
 			config.save();
@@ -76,12 +69,12 @@ public class LightningRod {
 	@PostInit
 	public void postInit(FMLPostInitializationEvent event) {
 		// Recipe
-		GameRegistry.addRecipe(new ItemStack(blockLightningRodGenerator), "rir", "ctc", "aga", 
-				'r', Items.getItem("refinedIronIngot"), 
+		GameRegistry.addRecipe(new ItemStack(blockLightningRodGenerator), "iei", "ctc", "cgc", 
 				'i', Items.getItem("ironFence"), 
+				'e', Items.getItem("energyCrystal"), 
 				'c', Items.getItem("trippleInsulatedIronCableItem"), 
 				't', Items.getItem("hvTransformer"), 
-				'a', Items.getItem("advancedCircuit"), 
+				'c', Items.getItem("advancedCircuit"), 
 				'g', Items.getItem("generator"));
 	}
 }

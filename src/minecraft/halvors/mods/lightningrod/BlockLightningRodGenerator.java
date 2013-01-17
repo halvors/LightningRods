@@ -14,8 +14,6 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public class BlockLightningRodGenerator extends BlockContainer {
-	private final Random random = new Random();
-	
 	public BlockLightningRodGenerator(int blockId) {
 		super(blockId, Material.iron);
 
@@ -65,7 +63,9 @@ public class BlockLightningRodGenerator extends BlockContainer {
 
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int s, float f1, float f2, float f3) {
-		if (player.isSneaking() || player.getHeldItem() != null && player.getHeldItem().itemID == Items.getItem("ironFence").itemID) {
+		ItemStack itemStack = player.getHeldItem();
+		
+		if (player.isSneaking() || itemStack != null && itemStack.itemID == Items.getItem("ironFence").itemID) {
 			return false;
 		}
 
