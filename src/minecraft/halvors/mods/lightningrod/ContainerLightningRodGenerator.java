@@ -39,7 +39,7 @@ public class ContainerLightningRodGenerator extends Container {
 		List<ICrafting> crafters = this.crafters;
 		
 		for (ICrafting crafter : crafters) {
-			if (canLightningStrike != tileEntity.canLightningStrike) {
+			if (canLightningStrike != tileEntity.canLightningStrike()) {
 				crafter.sendProgressBarUpdate(this, 0, tileEntity.canLightningStrike ? 1 : 0);
 			}
 			
