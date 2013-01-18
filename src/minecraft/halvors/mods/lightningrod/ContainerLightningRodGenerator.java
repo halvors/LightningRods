@@ -49,7 +49,7 @@ public class ContainerLightningRodGenerator extends Container {
             }
 		}
 		
-		this.canLightningStrike = tileEntity.getCanLightningStrike();
+		this.canLightningStrike = tileEntity.canLightningStrike();
 		this.energy = tileEntity.getStored();
 	}
 

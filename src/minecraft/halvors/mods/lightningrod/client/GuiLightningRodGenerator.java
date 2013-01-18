@@ -29,8 +29,8 @@ public class GuiLightningRodGenerator extends GuiContainer {
         	energy = tileEntity.getCapacity();
         }
         
-        fontRenderer.drawString(" " + energy, 103, 45, 0x404040);
-        fontRenderer.drawString("/" + tileEntity.getCapacity(), 103, 55, 0x404040);
+        fontRenderer.drawString(" " + energy, 90, 55, 0x404040);
+        fontRenderer.drawString("/" + tileEntity.getCapacity(), 90, 65, 0x404040);
 	}
 	
 	@Override
@@ -43,12 +43,12 @@ public class GuiLightningRodGenerator extends GuiContainer {
         drawTexturedModalRect(x, z, 0, 0, xSize, ySize);
         
         if (tileEntity.canLightningStrike) {
-            drawTexturedModalRect(x + 57, z + 36, 176, 0, 12, 14);
+            drawTexturedModalRect(x + 67, z + 36, 176, 0, 12, 14);
         }
         
         if (tileEntity.getStored() > 0) {
             int chargeLevel = (int) 24.0F * tileEntity.getStored() / tileEntity.getCapacity();
-            drawTexturedModalRect(x + 85, z + 34, 176, 14, chargeLevel + 1, 16);
+            drawTexturedModalRect(x + 94, z + 35, 176, 14, chargeLevel + 1, 16);
         }
 	}
 }

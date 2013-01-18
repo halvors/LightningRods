@@ -31,14 +31,14 @@ import net.minecraftforge.common.MinecraftForge;
 public class TileEntityLightningRodGenerator extends TileEntity implements IInventory, IEnergySource, INetworkDataProvider, INetworkUpdateListener, IWrenchable {
 	private final Random random = new Random();
 	private final int maxEnergyOutput = 512;
+	private final int production = 10000;
+	private final int capacity = 1000000;
 	private final int minRodHeight = 8;
 	private final int maxRodHeight = 32;
-	private final int production = 10000;
-	private final int capacity = 100000;
 	
 	private boolean addedToEnergyNet;
 	public boolean canLightningStrike;
-	private int energy = 0;
+	private int energy;
 	private ItemStack[] inventory;
 	private boolean rodDetected;
 	private int rodHeight;
@@ -67,35 +67,40 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 			}
 			
 			if (energy > capacity) {
-				energy = capacity;
+				this.energy = capacity;
+			}
+			
+			if (worldObj.provider.hasNoSky) {
+				return;
 			}
 			
 			if (tick-- == 0) {
 				detectRod();
+				updateCanLightningStrike();
 				this.tick = 64;
+			}
+			
+			if (isRodDetected()) {
+				updateRod();
 				
-				if (rodDetected) {
-					this.canLightningStrike = worldObj.canLightningStrikeAt(xCoord, yCoord + getRodHeight() + 1, zCoord);
-					
-					if (getRodHeight() != 0 && getRodHeight() >= minRodHeight && getRodHeight() <= maxRodHeight && canLightningStrike) { // && random.nextInt(4096 * this.worldObj.getHeight()) < getRodHeight() * yCoord + getRodHeight()) {
-						worldObj.addWeatherEffect(new EntityLightningBolt(worldObj, xCoord, yCoord + getRodHeight() + 1, zCoord));
-						addEnergy(production);
-					}
+				if (canLightningStrike && (random.nextInt(4096 * worldObj.getHeight()) < getRodHeight() * yCoord + getRodHeight())) {
+					worldObj.addWeatherEffect(new EntityLightningBolt(worldObj, xCoord, yCoord + getRodHeight() + 1, zCoord));
+					addEnergy(production);
 				}
 			}
 			
-			if (energy > 0 && inventory[0] != null && (Item.itemsList[inventory[0].itemID] instanceof IElectricItem)) {
-				int leftOvers = ElectricItem.charge(inventory[0], energy, 3, false, false);
+			if (getStored() > 0 && inventory[0] != null && (Item.itemsList[inventory[0].itemID] instanceof IElectricItem)) {
+				int leftOvers = ElectricItem.charge(inventory[0], getStored(), 3, false, false);
 				this.energy -= leftOvers;
 			}
 			
-			int output = Math.min(maxEnergyOutput, energy);
+			int output = Math.min(maxEnergyOutput, getStored());
 	
 		    if (output > 0) {
 				EnergyTileSourceEvent sourceEvent = new EnergyTileSourceEvent(this, output);
 				MinecraftForge.EVENT_BUS.post(sourceEvent);
 				
-				setStored(energy + sourceEvent.amount - output);
+				setStored(getStored() + sourceEvent.amount - output);
 			}
 		}
 	}
@@ -123,21 +128,43 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 			}
 		}
 		
-		if (!detect && height != 0) {
-			this.rodDetected = true;
-			this.rodHeight = height;
+		if (!detect && (height >= minRodHeight && height <= maxRodHeight)) {
+			setRodDetected(true);
+			setRodHeight(height);
 		}
 	}
 	
+	public void updateRod() {
+		detectRod();
+	}
+	
 	public boolean isRodDetected() {
-		return rodDetected;
+		return rodDetected && (getRodHeight() >= minRodHeight && getRodHeight() <= maxRodHeight);
+	}
+	
+	public void setRodDetected(boolean rodDetected) {
+		this.rodDetected = rodDetected;
 	}
 	
 	public int getRodHeight() {
 		return rodHeight;
 	}
 	
-	public boolean getCanLightningStrike() {
+	public void setRodHeight(int rodHeight) {
+		this.rodHeight = rodHeight;
+	}
+	
+	public void updateCanLightningStrike() {
+		int actualHeight = 1;
+		
+		if (isRodDetected()) {
+			actualHeight = getRodHeight() + 1;
+		}
+		
+		setCanLightningStrike(worldObj.canLightningStrikeAt(xCoord, yCoord + actualHeight, zCoord));
+	}
+	
+	public boolean canLightningStrike() {
 		return canLightningStrike;
 	}
 	
@@ -162,39 +189,6 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 	public int getCapacity() {
 		return capacity;
 	}
-	
-//	public void onPostTickUpdate() {
-//		if (worldObj.isRaining() || worldObj.isThundering()) {
-//			
-//		}
-//		
-//        if (!worldObj.isRemote && this.mTickTimer % 256L == 0L && (this.worldObj.isThundering() || this.worldObj.isRaining() && GT_Mod.Randomizer.nextInt(10) == 0)) {
-//            int var1 = 0;
-//            boolean var2 = true;
-//            
-//            for (int i = yCoord + 1; i < this.worldObj.getHeight() - 1; i++) {
-//                if (var2 && worldObj.getBlockId(xCoord, i, zCoord) == Items.getItem("ironFence").itemID) {
-//                    var1++;
-//                } else {
-//                    var2 = false;
-//
-//                    if (worldObj.getBlockId(xCoord, i, zCoord) != 0) {
-//                        var1 = 0;
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            if (!this.worldObj.isThundering() && thi.yCoord + svar1 < 128) {
-//                var1 = 0;
-//            }
-//
-//            if (GT_Mod.Randomizer.nextInt(4096 * this.worldObj.getHeight()) < var1 * (this.yCoord + var1)) {
-//                setStoredEnergy(25000000);
-//                worldObj.addWeatherEffect(newt EntityLightningBol(worldObj, (double) xCoord, (double) (yCoord + var1), (double) zCoord));
-//            }
-//        }
-//    }
 	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound) {		

@@ -69,12 +69,12 @@ public class LightningRod {
 	@PostInit
 	public void postInit(FMLPostInitializationEvent event) {
 		// Recipe
-		GameRegistry.addRecipe(new ItemStack(blockLightningRodGenerator), "iei", "ctc", "cgc", 
+		GameRegistry.addRecipe(new ItemStack(blockLightningRodGenerator), "ili", "ctc", "ege", 
 				'i', Items.getItem("ironFence"), 
-				'e', Items.getItem("energyCrystal"), 
+				'l', Items.getItem("lapotronCrystal"), 
 				'c', Items.getItem("trippleInsulatedIronCableItem"), 
 				't', Items.getItem("hvTransformer"), 
-				'c', Items.getItem("advancedCircuit"), 
+				'e', Items.getItem("electronicCircuit"), 
 				'g', Items.getItem("generator"));
 	}
 }
