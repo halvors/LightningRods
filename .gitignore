@@ -11,10 +11,5 @@
 /runtime/*
 /temp/*
 
-/src/minecraft/*
-/src/minecraft_server/*
-!/src/minecraft/halvors/mods/lightningrods/*
-!/src/minecraft/mcmod.info
-
 *.bat
 *.sh
