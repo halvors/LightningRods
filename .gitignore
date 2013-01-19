@@ -11,5 +11,10 @@
 /runtime/*
 /temp/*
 
+/src/minecraft/*
+/src/minecraft_server/*
+!/src/minecraft/halvors/*
+!/src/minecraft/mcmod.info
+
 *.bat
 *.sh
