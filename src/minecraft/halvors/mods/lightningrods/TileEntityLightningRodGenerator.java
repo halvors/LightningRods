@@ -34,14 +34,13 @@ import net.minecraftforge.common.MinecraftForge;
 public class TileEntityLightningRodGenerator extends TileEntity implements IInventory, IEnergySource, IEnergyStorage, INetworkDataProvider, INetworkUpdateListener, IWrenchable {
 	private final Random random = new Random();
 	private final int maxEnergyOutput = 2048;
-	private final int production = 10000;
+	private final int production = LightningRods.lightningRodGeneratorProduction;
 	private final int capacity = 1000000;
 	private final int tier = 3;
 	private final int minRodHeight = LightningRods.lightningRodGeneratorMinHeight;
 	private final int maxRodHeight = LightningRods.lightningRodGeneratorMaxHeight;
 	
 	private boolean addedToEnergyNet;
-	private boolean noSky;
 	private boolean canLightningStrike;
 	private int energy;
 	private ItemStack[] inventory;
@@ -63,10 +62,9 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 				MinecraftForge.EVENT_BUS.post(loadEvent);
 				
 				this.addedToEnergyNet = true;
-				this.noSky = worldObj.provider.hasNoSky;
 			}
 			
-			if (noSky) {
+			if (worldObj.provider.hasNoSky || production > capacity) {
 				return;
 			}
 			
@@ -108,6 +106,8 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 					} else {
 						doExplosion(output); // TODO: Do the TileEntity gets removed on explosion.
 					}
+					
+					// TODO: When lightning strikes, damage nearby Living Entities.
 				}
 			}
 			
@@ -163,7 +163,7 @@ public class TileEntityLightningRodGenerator extends TileEntity implements IInve
 		boolean detect = true;
 		
 		for (int i = yCoord + 1; i < worldObj.getHeight() - 1; i++) {
-			if (detect && worldObj.getBlockId(xCoord, i, zCoord) == Items.getItem("ironFence").itemID) {
+			if (detect && worldObj.getBlockId(xCoord, i, zCoord) == new ItemStack(LightningRods.blockLightningRod).itemID) {
 				height++;
 			} else {
 				detect = false;

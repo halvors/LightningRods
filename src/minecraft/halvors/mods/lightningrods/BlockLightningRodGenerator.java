@@ -16,13 +16,13 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public class BlockLightningRodGenerator extends BlockContainer {
-	private final Random random = new Random();
+	private static final Random random = new Random();
 	
-	public BlockLightningRodGenerator(int blockId) {
-		super(blockId, Material.iron);
-
-		setBlockName("Lightning Rod");
+	public BlockLightningRodGenerator(int blockId, int textureId) {
+		super(blockId, textureId, Material.iron);
+		
 		setHardness(3.0F);
+		setBlockName("blockLightningRodGenerator");
 		setRequiresSelfNotify();
 		setCreativeTab(CreativeTabs.tabRedstone);
 	}
@@ -41,13 +41,27 @@ public class BlockLightningRodGenerator extends BlockContainer {
 	public int getBlockTexture(IBlockAccess blockAccess, int x, int y, int z, int side) {
 		switch (side) {
 		case 1: // Top
-			return 0;
+			return 6;
 			
 		case 0: // Bottom
-			return 1;
+			return 7;
 
 		default: // Sides
-			return 2;
+			return 8;
+		}
+	}
+	
+	@Override
+	public int getBlockTextureFromSideAndMetadata(int side, int metadata) {
+		switch (side) {
+		case 1: // Top
+			return 6;
+			
+		case 0: // Bottom
+			return 7;
+			
+		default: // Sides
+			return 8;
 		}
 	}
 

@@ -8,13 +8,11 @@ import net.minecraft.tileentity.TileEntity;
 import org.lwjgl.opengl.GL11;
 
 public class GuiLightningRodGenerator extends GuiContainer {
-	private ContainerLightningRodGenerator container;
 	private TileEntityLightningRodGenerator tileEntity;
 	
 	public GuiLightningRodGenerator(ContainerLightningRodGenerator container) {
 		super(container);
 		
-		this.container = container;
 		this.tileEntity = container.getTileEntity();
 	}
 	
